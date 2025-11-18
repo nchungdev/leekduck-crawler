@@ -27,7 +27,7 @@
     "RaidBossScraper": {
       "url": "https://leekduck.com/boss/",
       "file_name": "raid_bosses",
-      "enabled": true,
+      "enabled": false,
       "schedule": {
         "type": "default_12h"
       }
