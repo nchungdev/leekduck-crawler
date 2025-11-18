@@ -60,7 +60,7 @@
     "EventScraper": {
       "url": "https://leekduck.com/events/",
       "file_name": "events",
-      "enabled": true,
+      "enabled": false,
       "check_existing": false,
       "schedule": {
         "type": "default_12h"
