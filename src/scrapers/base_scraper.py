@@ -12,11 +12,13 @@ from src.utils import save_html
 
 class BaseScraper(ABC):
     def __init__(self, url: str, file_name: str, scraper_settings: dict[str, Any]):
+        # Always resolve actual repo root
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.url = url
-        self.raw_html_path = os.path.join("html", f"{file_name}.html")
-        self.json_path = os.path.join(
-            "json" if not os.getenv("CI") else ".", f"{file_name}.json"
-        )
+        # Save HTML inside repo/html/
+        self.raw_html_path = os.path.join(root_dir, "html", f"{file_name}.html")
+        # Save JSON inside repo/json/
+        self.json_path = os.path.join(root_dir, "json", f"{file_name}.json")
         self.scraper_settings = scraper_settings
 
     def _fetch_html(self) -> Optional[BeautifulSoup]:

@@ -2,4 +2,5 @@ requests
 beautifulsoup4
 lxml
 selenium
+firebase_admin
 playwright

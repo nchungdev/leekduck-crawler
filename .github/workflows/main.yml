@@ -2,8 +2,8 @@ name: Scrape Leek Duck Data
 
 on:
   schedule:
-    - cron: "*/20 * * * *"   # every 20 minutes
-    - cron: "0 */12 * * *"   # every 12 hours
+    - cron: "0 */4 * * *"    # every 4 hours
+    - cron: "0 */24 * * *"   # every 24 hours
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Cache dependencies
+      # ------------------------------------------------
+      # Cache pip dependencies
+      # ------------------------------------------------
+      - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -36,7 +39,7 @@ jobs:
         run: pip install -r requirements.txt
 
       # ------------------------------------------------
-      # 🚀 Added: Cache Playwright browsers
+      # Cache Playwright browsers
       # ------------------------------------------------
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -47,7 +50,7 @@ jobs:
             ${{ runner.os }}-pw-
 
       # ------------------------------------------------
-      # 🚀 Updated Install Playwright browsers to skip if cached
+      # Install Playwright browsers (skip if cached)
       # ------------------------------------------------
       - name: Install Playwright browsers
         run: |
@@ -58,8 +61,16 @@ jobs:
             echo "Playwright Chromium cached. Skipping install."
           fi
 
+      - name: Decode service account JSON (base64)
+        run: |
+            echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 --decode > serviceAccount.json
+
       - name: Run archiver and scrapers
         run: python -m src.main
+
+
+      - name: Upload JSON to Firestore
+        run: python -m src.upload_firestore
 
       - name: Commit and push JSON to data branch
         run: |
@@ -68,8 +79,8 @@ jobs:
 
           # Temporarily move all new data out of the way
           mkdir -p ./temp_data
-          if ls *.json 1> /dev/null 2>&1; then
-            mv *.json ./temp_data/
+          if [ -d "./json" ]; then
+            mv json ./temp_data/
           fi
           if [ -d "./archives" ]; then
             mv archives ./temp_data/
@@ -78,17 +89,17 @@ jobs:
           # Prepare the data branch
           git fetch
           git checkout -f data
-
-          # Move the new data back, overwriting old files if they exist
-          if [ -d "./temp_data" ]; then
-            cp -r ./temp_data/* .
-            rm -rf ./temp_data
+          
+          if [ -d "./temp_data/json" ]; then
+            cp -r ./temp_data/json .
           fi
-
-          # Specifically add only the data files and folders
-          git add *.json
-          git add archives/
-
-          # Commit and push
+          if [ -d "./temp_data/archives" ]; then
+            cp -r ./temp_data/archives .
+          fi
+          rm -rf ./temp_data
+          
+          git add json/
+          git add archives/ || true
+          
           git commit -m "Automated data update" || echo "No changes to commit"
           git push origin data
