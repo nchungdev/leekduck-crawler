@@ -2,8 +2,8 @@ name: Scrape Leek Duck Data
 
 on:
   schedule:
-    - cron: "0 */4 * * *"    # every 4 hours
-    - cron: "0 */24 * * *"   # every 24 hours
+#    - cron: "0 */4 * * *"    # every 4 hours
+    - cron: "0 */6 * * *"   # every 24 hours
   workflow_dispatch:
 
 jobs:
@@ -72,8 +72,8 @@ jobs:
       - name: Upload JSON to Firestore
         run: python -m src.upload_firestore
 
-      - name: Commit and push JSON to data branch
-        run: |
+      #- name: Commit and push JSON to data branch
+       # run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
