@@ -121,6 +121,9 @@ To get a local copy up and running, follow these simple steps.
     ```sh
     pip install -r requirements.txt
     ```
+    ```sh
+    playwright install --with-deps chromium
+    ```
 
 4.  **Run the scraper manually:**
 

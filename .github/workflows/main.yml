@@ -2,7 +2,8 @@ name: Scrape Leek Duck Data
 
 on:
   schedule:
-    - cron: "0 */24 * * *"
+    - cron: "*/20 * * * *"   # every 20 minutes
+    - cron: "0 */12 * * *"   # every 12 hours
   workflow_dispatch:
 
 jobs:
@@ -13,10 +14,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Check out main branch for code
+      - name: Check out master branch for code
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,10 +35,28 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
+      # ------------------------------------------------
+      # 🚀 Added: Cache Playwright browsers
+      # ------------------------------------------------
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
         with:
-          chrome-version: stable
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-pw-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pw-
+
+      # ------------------------------------------------
+      # 🚀 Updated Install Playwright browsers to skip if cached
+      # ------------------------------------------------
+      - name: Install Playwright browsers
+        run: |
+          if [ ! -d ~/.cache/ms-playwright/chromium-* ]; then
+            echo "Installing Playwright Chromium..."
+            python -m playwright install --with-deps chromium
+          else
+            echo "Playwright Chromium cached. Skipping install."
+          fi
 
       - name: Run archiver and scrapers
         run: python -m src.main
