@@ -72,4 +72,4 @@ class RaidBossScraper(BaseScraper):
 
                 flat_list.append(boss_info)
 
-        return {"result": flat_list}
+        return {"results": flat_list}

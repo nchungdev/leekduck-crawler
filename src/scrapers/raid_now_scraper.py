@@ -198,4 +198,4 @@ class RaidNowScraper(BaseScraper):
             except Exception as e:
                 logger.exception("Error parsing block: %s", e)
 
-        return {"result": raids}
+        return {"results": raids}

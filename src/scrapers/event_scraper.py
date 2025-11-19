@@ -33,7 +33,7 @@ def convert_events_json(old_json: dict) -> dict:
             }
             result.append(flat)
 
-    return { "result": result }
+    return { "results": result }
 
 class EventScraper(BaseScraper):
     def __init__(

@@ -25,7 +25,7 @@ def convert_rocket_json(old_json: dict) -> dict:
                 }
                 result.append(item)
 
-    return {"result": result}
+    return {"results": result}
 
 class RocketLineupScraper(BaseScraper):
     def __init__(self, url: str, file_name: str, scraper_settings: dict[str, Any]):
