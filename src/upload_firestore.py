@@ -12,9 +12,6 @@ RETRY_ATTEMPTS = 3
 RETRY_BACKOFF = 2  # seconds
 
 
-# ------------------------------------------------------
-# Helpers
-# ------------------------------------------------------
 def get_repo_root() -> str:
     """Return project root folder."""
     script_dir = os.path.dirname(os.path.abspath(__file__))  # src/
@@ -30,7 +27,7 @@ def init_firebase(service_account_path: str):
 
 
 def find_json_dirs(repo_root: str) -> List[str]:
-    """Look for json directories (local run or CI)."""
+    """Look for json directories."""
     candidates = [
         os.path.join(repo_root, "json"),
         os.path.join(repo_root, "src", "json"),
@@ -53,75 +50,13 @@ def safe_load_json(path: str) -> Any:
         return json.load(fh)
 
 
-# ------------------------------------------------------
-# Normalization logic
-# ------------------------------------------------------
-def normalize_json(data: Any, doc_id: str) -> Dict[str, Any]:
-    """
-    Convert ANY scraped JSON into normalized form:
-
-    {
-       "results": [ ... ],
-       "_updated_at": SERVER_TIMESTAMP
-    }
-
-    Accepted input patterns:
-    1. Already {results: [...]} -> keep
-    2. { category1: [...], category2: [...] }
-         → flatten all items, inject "category"
-    3. [ ... ] raw list → wrap into {results:[...]}
-    4. Everything else → wrap into {results:[data]}
-    """
-
-    # case 1 — already normalized
-    if isinstance(data, dict) and "results" in data and isinstance(data["results"], list):
-        return data
-
-    # case 2 — dict of lists (common for eggs, rocket lineups, events)
-    if isinstance(data, dict):
-        all_items = []
-
-        for category, items in data.items():
-            if isinstance(items, list):
-                # inject category field
-                for it in items:
-                    if isinstance(it, dict):
-                        it2 = dict(it)
-                        it2["category"] = category
-                        all_items.append(it2)
-                    else:
-                        all_items.append({"value": it, "category": category})
-            else:
-                # single value under a category
-                all_items.append({
-                    "value": items,
-                    "category": category
-                })
-
-        return {"results": all_items}
-
-    # case 3 — plain list
-    if isinstance(data, list):
-        return {"results": data}
-
-    # case 4 — everything else (string, number…)
-    return {"results": [data]}
-
-
-# ------------------------------------------------------
-# Firestore uploader
-# ------------------------------------------------------
 def upload_document(db: firestore.Client, collection: str, doc_id: str, data: Dict[str, Any]):
-    """Upload a normalized document into Firestore."""
+    """Upload raw scraped data + _updated_at timestamp."""
     payload = dict(data)
     payload["_updated_at"] = firestore.SERVER_TIMESTAMP
-
     db.collection(collection).document(doc_id).set(payload)
 
 
-# ------------------------------------------------------
-# Main
-# ------------------------------------------------------
 def main():
     repo_root = get_repo_root()
     service_account_path = os.path.join(repo_root, "serviceAccount.json")
@@ -129,7 +64,6 @@ def main():
     print(f"[upload_firestore] repo_root = {repo_root}")
     print(f"[upload_firestore] Using {service_account_path}")
 
-    # Init Firebase
     try:
         init_firebase(service_account_path)
     except Exception as e:
@@ -138,7 +72,6 @@ def main():
 
     db = firestore.client()
 
-    # Load JSON
     json_dirs = find_json_dirs(repo_root)
     if not json_dirs:
         print("[upload_firestore] ERROR: No json directories found.")
@@ -157,7 +90,7 @@ def main():
         filename = os.path.basename(path)
         doc_id = filename[:-5]  # strip .json
 
-        print(f"[upload_firestore] Processing {filename} -> scraped_data/{doc_id}")
+        print(f"[upload_firestore] Uploading {filename} → scraped_data/{doc_id}")
 
         try:
             raw = safe_load_json(path)
@@ -166,14 +99,11 @@ def main():
             any_err = True
             continue
 
-        # normalize scraped data
-        normalized = normalize_json(raw, doc_id)
-
-        # retry upload
+        # Upload raw JSON + timestamp
         for attempt in range(1, RETRY_ATTEMPTS + 1):
             try:
-                upload_document(db, "scraped_data", doc_id, normalized)
-                print(f"[upload_firestore] Uploaded -> scraped_data/{doc_id}")
+                upload_document(db, "scraped_data", doc_id, raw)
+                print(f"[upload_firestore] Uploaded → scraped_data/{doc_id}")
                 break
             except Exception as e:
                 print(f"[WARN] attempt {attempt} failed for {doc_id}: {e}", file=sys.stderr)
