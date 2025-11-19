@@ -1,0 +1,73 @@
+name: Scrape Leek Duck Data
+
+on:
+  schedule:
+    - cron: "0 */20 * * *"    # every 4 hours
+    - cron: "0 */24 * * *"   # every 24 hours
+  workflow_dispatch:
+
+jobs:
+  scrape-and-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out master branch for code
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ------------------------------------------------
+      # Cache pip dependencies
+      # ------------------------------------------------
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ------------------------------------------------
+      # Cache Playwright browsers
+      # ------------------------------------------------
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-pw-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pw-
+
+      # ------------------------------------------------
+      # Install Playwright browsers (skip if cached)
+      # ------------------------------------------------
+      - name: Install Playwright browsers
+        run: |
+          if [ ! -d ~/.cache/ms-playwright/chromium-* ]; then
+            echo "Installing Playwright Chromium..."
+            python -m playwright install --with-deps chromium
+          else
+            echo "Playwright Chromium cached. Skipping install."
+          fi
+
+      - name: Decode service account JSON (base64)
+        run: |
+            echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 --decode > serviceAccount.json
+
+      - name: Run archiver and scrapers
+        run: python -m src.main
+
+
+      - name: Upload JSON to Firestore
+        run: python -m src.upload_firestore
