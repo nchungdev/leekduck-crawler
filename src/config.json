@@ -13,7 +13,7 @@
     "RaidNowScraper": {
       "url": "https://raidnow.leekduck.com",
       "file_name": "raid_now",
-      "enabled": true,
+      "enabled": false,
       "check_existing": false,
       "schedule": {
         "type": "raid_now",
