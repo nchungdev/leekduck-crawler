@@ -77,7 +77,7 @@ class RaidNowScraper(BaseScraper):
     # -------------------------------------------------
     # Parse
     # -------------------------------------------------
-    def parse(self, soup: BeautifulSoup) -> List[Dict[str, Any]]:
+    def parse(self, soup: BeautifulSoup) -> dict[str, Any]:
         raids: List[Dict[str, Any]] = []
 
         blocks = (
@@ -114,14 +114,6 @@ class RaidNowScraper(BaseScraper):
                     expired = "Expired" in text or "expired" in text
 
                 # 4. Players
-                cur_players = max_players = None
-                ppl = block.select_one(".raid_list_vacancy")
-                if ppl:
-                    import re
-                    m = re.search(r"(\d+)\s*/\s*(\d+)", ppl.get_text(" ", strip=True))
-                    if m:
-                        cur_players = int(m.group(1))
-                        max_players = int(m.group(2))
 
                 # 5. Country
                 country = None
@@ -193,7 +185,6 @@ class RaidNowScraper(BaseScraper):
                         "cp": cp,
                         "cp_weather": cp_weather,
                         "expired": expired,
-                        "players": {"current": cur_players, "max": max_players},
                         "trainer_level": trainer_level,
                         "stars": stars,
                         "is_hot": is_hot,
@@ -207,4 +198,4 @@ class RaidNowScraper(BaseScraper):
             except Exception as e:
                 logger.exception("Error parsing block: %s", e)
 
-        return raids
+        return {"result": raids}

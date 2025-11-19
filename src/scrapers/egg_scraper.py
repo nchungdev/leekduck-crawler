@@ -4,9 +4,18 @@ from typing import Any, cast
 from bs4 import BeautifulSoup, Tag
 
 from src.utils import parse_pokemon_list
-
 from .base_scraper import BaseScraper
 
+def convert_egg_json(old_json: dict) -> dict:
+    result = []
+
+    for title, mons in old_json.items():
+        for mon in mons:
+            item = dict(mon)
+            item["title"] = title
+            result.append(item)
+
+    return {"result": result}
 
 class EggScraper(BaseScraper):
     def __init__(self, url: str, file_name: str, scraper_settings: dict[str, Any]):
@@ -40,4 +49,4 @@ class EggScraper(BaseScraper):
 
             egg_pool[egg_group_name] = pokemon_data
 
-        return egg_pool
+        return convert_egg_json(egg_pool)

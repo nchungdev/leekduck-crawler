@@ -15,6 +15,25 @@ def scrape_single_event_page(
     """Helper function to scrape a single event page with a shared scraper instance."""
     return scraper.scrape(url)
 
+def convert_events_json(old_json: dict) -> dict:
+    result = []
+
+    for category, events in old_json.items():
+        for event in events:
+            flat = {
+                "category": category,
+                "title": event.get("title"),
+                "article_url": event.get("article_url"),
+                "banner_url": event.get("banner_url"),
+                "is_local_time": event.get("is_local_time"),
+                "start_time": event.get("start_time"),
+                "end_time": event.get("end_time"),
+                "description": event.get("description"),
+                "details": event.get("details", {}),
+            }
+            result.append(flat)
+
+    return { "result": result }
 
 class EventScraper(BaseScraper):
     def __init__(
@@ -151,4 +170,4 @@ class EventScraper(BaseScraper):
                 merged_events[category] = []
             merged_events[category].extend(events)
 
-        return merged_events
+        return convert_events_json(merged_events)

@@ -7,7 +7,29 @@ from src.utils import parse_cp_range
 
 from .base_scraper import BaseScraper
 
+def convert_research_json(old_json: dict) -> dict:
+    result = []
 
+    for title, tasks in old_json.items():
+        for task_entry in tasks:
+            task_text = task_entry.get("task")
+            rewards = task_entry.get("rewards", [])
+
+            for reward in rewards:
+                item = {
+                    "title": title,                    # e.g. "High Voltage Tasks"
+                    "task": task_text,                 # e.g. "Catch 10 Electric-type Pokémon"
+                    "reward_type": reward.get("type"), # "encounter", "item", "resource"
+                    "name": reward.get("name"),
+                    "shiny_available": reward.get("shiny_available"),
+                    "cp_range": reward.get("cp_range"),
+                    "quantity": reward.get("quantity"),
+                    "asset_url": reward.get("asset_url"),
+                }
+
+                result.append(item)
+
+    return {"result": result}
 class ResearchScraper(BaseScraper):
     def __init__(self, url: str, file_name: str, scraper_settings: dict[str, Any]):
         super().__init__(url, file_name, scraper_settings)
@@ -102,4 +124,4 @@ class ResearchScraper(BaseScraper):
                         {"task": task_description, "rewards": rewards_list}
                     )
 
-        return research_data
+        return convert_research_json(research_data)

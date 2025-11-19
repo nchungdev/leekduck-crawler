@@ -3,9 +3,29 @@ from typing import Any, cast
 from bs4 import BeautifulSoup, Tag
 
 from src.utils import parse_pokemon_list
-
 from .base_scraper import BaseScraper
 
+
+def convert_rocket_json(old_json: dict) -> dict:
+    result = []
+
+    for leader, slots in old_json.items():
+        for slot_info in slots:
+            slot = slot_info.get("slot")
+            is_encounter = slot_info.get("is_encounter", False)
+
+            for mon in slot_info.get("pokemons", []):
+                item = {
+                    "leader": leader,
+                    "slot": slot,
+                    "is_encounter": is_encounter,
+                    "name": mon.get("name"),
+                    "shiny_available": mon.get("shiny_available"),
+                    "asset_url": mon.get("asset_url"),
+                }
+                result.append(item)
+
+    return {"result": result}
 
 class RocketLineupScraper(BaseScraper):
     def __init__(self, url: str, file_name: str, scraper_settings: dict[str, Any]):
@@ -39,4 +59,4 @@ class RocketLineupScraper(BaseScraper):
                             "is_encounter": is_encounter_slot,
                         }
                     )
-        return lineups
+        return convert_rocket_json(lineups)
