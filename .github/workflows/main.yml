@@ -3,7 +3,7 @@ name: Scrape Leek Duck Data
 on:
   schedule:
 #    - cron: "*/30 * * * *"   # every 30 minutes
-    - cron: "0 */12 * * *"   # every 12 hours
+    - cron: "0 0 * * 0"   # every 00:00 SUNDAY
   workflow_dispatch:
 
 jobs:

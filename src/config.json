@@ -13,7 +13,7 @@
     "PokebaseScraper": {
       "url": "https://pokebase.app/pokemon-go/pokemon/",
       "file_name": "pokemon_list",
-      "enabled": false,
+      "enabled": true,
       "schedule": {
         "type": "default_12h"
       }
