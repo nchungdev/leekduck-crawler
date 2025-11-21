@@ -5,3 +5,4 @@ from .raid_boss_scraper import RaidBossScraper
 from .research_scraper import ResearchScraper
 from .rocket_lineup_scraper import RocketLineupScraper
 from .raid_now_scraper import RaidNowScraper
+from .pokemon_scraper import PokebaseScraper

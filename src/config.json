@@ -10,6 +10,14 @@
     "cache_expiration_hours": 1
   },
   "scrapers": {
+    "PokebaseScraper": {
+      "url": "https://pokebase.app/pokemon-go/pokemon/",
+      "file_name": "pokemon_list",
+      "enabled": true,
+      "schedule": {
+        "type": "default_12h"
+      }
+    },
     "RaidNowScraper": {
       "url": "https://raidnow.leekduck.com",
       "file_name": "raid_now",
