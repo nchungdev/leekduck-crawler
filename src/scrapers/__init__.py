@@ -6,3 +6,4 @@ from .research_scraper import ResearchScraper
 from .rocket_lineup_scraper import RocketLineupScraper
 from .raid_now_scraper import RaidNowScraper
 from .pokemon_scraper import PokebaseScraper
+from .pokemon_detail_scraper import PokemonDetailScraper
